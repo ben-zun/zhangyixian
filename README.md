@@ -189,6 +189,8 @@ RAG_change.py：将材料信息变成RAG可处理的形式
 
 train_lora_sft_v2_stage.py：lora微调训练代码
 
+libiary:训练时的原md材料学知识文件
+
 ---
 
 ## 10. 学术价值
