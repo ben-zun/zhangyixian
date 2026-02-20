@@ -8,13 +8,13 @@
 
 ## 摘要
 
-通用大语言模型（Large Language Models, LLMs）在自然语言理解与生成任务中展现出强大的通用能力，但在材料科学等高度结构化、物理约束严格的科学领域中，仍普遍存在事实性幻觉、数值错误与机理解释不严谨等问题。
+通用大语言模型在自然语言理解与生成任务中展现出强大能力，但在材料科学等高度结构化、物理约束严格的科学领域中，仍普遍存在事实性幻觉、数值错误与机理解释不严谨等问题。
 
-本项目构建了一套**材料科学知识增强大模型系统**，通过将结构化材料数据库与大语言模型深度融合，提出：
+本项目构建了一套**材料科学知识增强大模型系统**，通过将结构化材料数据库与大语言模型融合，提出：
 
 * 面向材料物理语义的指令数据重构方法
 * 基于 LoRA 的领域对齐微调策略
-* 稠密向量 + 稀疏关键词的混合检索增强生成（Hybrid RAG）框架
+* 稠密向量 + 稀疏关键词的混合检索增强生成框架
 * 面向科学问答的自动化多维评测体系
 
 实验结果表明，该系统在材料结构参数、热力学稳定性与机理解释等任务上显著降低了幻觉率并提升了物理一致性。
@@ -35,9 +35,9 @@
 * 错误生成形成能、Ehull 等关键指标
 * 缺乏物理机制约束推理能力
 
-因此，本研究提出构建**材料知识对齐大语言模型（Materials Knowledge-Aligned LLM）**，实现：
+因此，本研究提出构建**融合Qwen微调与RAG的材料知识智能问答系统**，实现：
 
-> 结构化物理语义注入 + 证据增强生成 + 领域适配微调
+> 结构化物理语义注入 + 证据增强生成 + 微调
 
 ---
 
@@ -65,7 +65,7 @@ LoRA 指令微调
 
 ### 3.1 材料数据库采集
 
-* 基于 Materials Project 全量获取所有材料摘要数据
+* 基于 Materials Project 获取所有材料摘要数据
 * 包含：
 
   * 晶体结构信息
@@ -79,7 +79,7 @@ LoRA 指令微调
 
 ---
 
-### 3.2 物理语义重构策略
+### 3.2 物理语义重构
 
 将原始结构化字段转化为：
 
@@ -99,15 +99,15 @@ FORMULA | SpaceGroup | BandGap | FormationEnergy | Ehull | Stability | Lattice P
 
 ## 4. 领域对齐 LoRA 微调
 
-采用两阶段参数高效微调策略：
+采用两部分数据进行高效微调：
 
-### 阶段一：知识注入
+### 部分一：知识注入
 
 * 长文本材料科学知识
 * 物理概念解释
 * 数据驱动事实对齐
 
-### 阶段二：任务强化
+### 部分二：任务强化
 
 * 具体材料参数问答
 * 结构对比推理
@@ -138,18 +138,10 @@ FORMULA | SpaceGroup | BandGap | FormationEnergy | Ehull | Stability | Lattice P
 
 ## 6. 自动化评测体系
 
-对比模型：
-
-| 模型         | 说明        |
-| ---------- | --------- |
-| Base       | 原始通用大模型   |
-| LoRA       | 领域微调模型    |
-| LoRA + RAG | 微调 + 检索增强 |
-
+对比模型原始通用大模型，领域微调模型，微调 + 检索增强模型三种模型在不同维度上的优劣
 评测维度：
 
 * 事实正确性
-* 证据引用能力
 * 物理机制解释深度
 * 完整性
 * 表达清晰度
@@ -160,9 +152,9 @@ FORMULA | SpaceGroup | BandGap | FormationEnergy | Ehull | Stability | Lattice P
 
 | 模型       | 幻觉率 | 事实准确性 | 机理解释 |
 | -------- | --- | ----- | ---- |
-| Base     | 高   | 低     | 中    |
+| Base     | 中   | 低     | 低    |
 | LoRA     | 中   | 中     | 中    |
-| LoRA+RAG | 极低  | 高     | 高    |
+| LoRA+RAG | 低  | 高     | 高    |
 
 混合检索增强显著提升材料科学问答可靠性。
 
@@ -178,25 +170,24 @@ FORMULA | SpaceGroup | BandGap | FormationEnergy | Ehull | Stability | Lattice P
 
 ---
 
-## 9. 快速复现流程
+## 9.文件介绍
 
-```bash
-# 1. 下载材料数据库
-python down_all.py
-
-# 2. 构建混合检索索引
-python build_milvus_hybrid_index.py
-
-# 3. LoRA 两阶段微调
-python train_lora_sft_v2_stage.py
-
-# 4. 启动问答系统
-python app1.py
-
-# 5. 执行评测
-python evaluate1.py
 ```
+eval_out1文件夹：包括questions_50.json,phase1_base.json,phase2_lora.json,为评估时的工程代码，questions_50是询问三种模型的50个问题，phase1_base.json,phase2_lora.json分别是三种模型对于问题生成的结果
 
+app1.py:实际的调用代码，当想进行聊天时，完成好基本配备，使用chainlit run app1.py即可
+
+build_milvus_hybrid_index.py：构建稀疏和稠密向量rag搜索库的代码
+
+down_all.py：从material project拉取15w个材料的具体数据
+
+evaluate1.py：评估代码，对模型进行具体评估
+
+prepare_sft_data.py：数据预处理，生成模型lora微调需要的jsonl语料信息，对基础语料进行处理
+
+RAG_change.py：将材料信息变成RAG可处理的形式
+
+train_lora_sft_v2_stage.py：lora微调训练代码
 ---
 
 ## 10. 学术价值
@@ -207,31 +198,6 @@ python evaluate1.py
 * RAG 在高精度科学场景中的必要性
 * 混合检索可显著降低事实性幻觉
 
-该框架具备跨领域推广潜力，如：
-
-* 化学数据库
-* 生物医学知识库
-* 工程仿真系统
-
+本研究为大语言模型在材料科学等高结构化专业领域中的工程应用提供了一种可行的系统化实现路径。未来工作可进一步扩展训练数据规模与材料属性覆盖范围，并探索多模态材料数据融合分析方法，以构建更加智能与可靠的材料研发辅助系统。
 ---
 
-## 📜 License
-
-MIT License
-
----
-
-## 📬 联系方式
-
-欢迎学术交流、Issue 与合作研究。
-
----
-
-如果你愿意，我还能继续给你升级：
-
-📄 带数学定义版 README（Formation Energy / Convex Hull 正式公式）
-📊 带实验流程图 README
-📈 带性能曲线 README
-📚 可直接对应论文章节的 README
-
-要不要我帮你再做一个**“审稿人复现实验标准版 README”**？
